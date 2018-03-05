@@ -1,0 +1,46 @@
+#searchBox > input:focus,
+button:focus {
+  outline: none;
+}
+
+#logoHeader {
+  font-family: "Amatic SC", cursive;
+}
+
+.modal {
+  font-family: "Lato", sans-serif;
+}
+
+#clearButton {
+  font-size: 0.7em;
+  opacity: 1;
+}
+
+#root > div {
+  height: 90vh;
+}
+
+#resultsHeader {
+  background-color: #fafafa;
+  border-bottom-color: #cecece;
+}
+
+#photoGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  grid-gap: 0.1em;
+  justify-items: center;
+}
+
+.imageThumb {
+  object-fit: cover;
+}
+
+.imageContainer {
+  height: 16rem;
+  width: 16rem;
+}
+
+.amatic {
+  font-family: "Amatic SC", cursive;
+}

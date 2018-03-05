@@ -1,0 +1,2 @@
+registerValidSW	/home/jwe/Documents/photosuggest/src/registerServiceWorker.js	/^function registerValidSW(swUrl) {$/;"	f	language:JavaScript
+checkValidServiceWorker	/home/jwe/Documents/photosuggest/src/registerServiceWorker.js	/^function checkValidServiceWorker(swUrl) {$/;"	f	language:JavaScript
