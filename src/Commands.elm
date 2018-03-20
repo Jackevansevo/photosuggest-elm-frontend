@@ -1,24 +1,32 @@
 module Commands exposing (..)
 
 import Http
-import Json.Decode exposing (Decoder, bool, list, string)
+import Json.Decode exposing (Decoder, bool, list, string, at)
+import Models exposing (Sources, Model)
 import Json.Decode.Pipeline exposing (decode, optional, required)
 import Models exposing (Photo)
 import Msgs exposing (Msg)
 import RemoteData
+import Set as S
 
 
-searchImage : String -> Cmd Msg
-searchImage query =
+buildSources : Sources -> String
+buildSources sources =
+    -- [TODO] Look for more generic url building function
+    if not (S.isEmpty sources) then
+        "&sources=" ++ (String.join "&" (S.toList sources))
+    else
+        ""
+
+
+searchImage : String -> Sources -> Cmd Msg
+searchImage query sources =
     if String.isEmpty query then
         Cmd.none
     else
         let
             url =
-                "http://localhost:8001/?q=" ++ query
-
-            _ =
-                Debug.log "query" query
+                "http://localhost:8001/?q=" ++ query ++ buildSources sources
         in
             Http.get url photosDecoder
                 |> RemoteData.sendRequest
