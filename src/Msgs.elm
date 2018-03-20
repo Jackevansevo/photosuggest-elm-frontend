@@ -20,3 +20,6 @@ type Msg
     | KeyMsg Keyboard.KeyCode
     | NoOp
     | StopViewing
+    | ToggleFlickr
+    | ToggleBing
+    | ToggleCheckbox String
