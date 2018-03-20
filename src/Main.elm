@@ -27,7 +27,7 @@ init location =
                                 initialModel initalRoute
                         in
                             ( { model | query = query, previousSearch = query }
-                            , searchImage query
+                            , searchImage query model.sources
                             )
 
                     Nothing ->
