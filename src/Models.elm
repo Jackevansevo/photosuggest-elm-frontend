@@ -2,6 +2,8 @@ module Models exposing (..)
 
 import RemoteData exposing (WebData)
 import Http
+import Dict
+import Set
 
 
 type Route
@@ -10,11 +12,18 @@ type Route
     | NotFoundRoute
 
 
+type alias Sources =
+    Set.Set String
+
+
 type alias Photo =
     { url : String
     , source : String
     , loaded : Bool
     , host : String
+    , description : String
+    , license : String
+    , owner : String
     }
 
 
@@ -25,6 +34,7 @@ type alias Model =
     , route : Route
     , error : Maybe Http.Error
     , viewing : Maybe Photo
+    , sources : Sources
     }
 
 
@@ -36,4 +46,5 @@ initialModel route =
     , route = route
     , error = Nothing
     , viewing = Nothing
+    , sources = Set.singleton "local"
     }
