@@ -1,12 +1,18 @@
 module View exposing (..)
 
 import Html exposing (..)
-import Models exposing (Model, Photo)
+import Models exposing (Model, Photo, Sources)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onInput, onClick, onSubmit, on)
 import Msgs exposing (..)
 import RemoteData exposing (WebData)
 import Svg.Attributes
+import Set as S
+
+
+-- [TODO]
+-- Get rid of ugly chained css classes and  ELM CSS properties to render
+-- components
 
 
 view : Model -> Html Msg
@@ -53,7 +59,6 @@ resultsView model =
 
 sourceIcon : String -> Html Msg
 sourceIcon source =
-    -- TODO Should probably make these lower case on the backend
     case String.toLower source of
         "flickr" ->
             i [ class "fab fa-flickr" ] []
@@ -65,10 +70,24 @@ sourceIcon source =
             i [ class "fab fa-question-circle" ] []
 
 
+copyButton : String -> Html Msg
+copyButton url =
+    a [ class "f6 no-underline silver br2 ba b--black ph3 pv2 hover-moon-gray mr2", style [ ( "background", "#111111" ) ] ]
+        [ span [] [ i [ class "fas fa-link pr2" ] [], text "Copy" ] ]
+
+
+photoDescription : Photo -> String
+photoDescription photo =
+    if String.isEmpty (String.trim photo.description) then
+        "n/a"
+    else
+        photo.description
+
+
 imageModal : Photo -> Html Msg
 imageModal photo =
     let
-        viewBtn =
+        visitBtn =
             if String.isEmpty photo.host then
                 text ""
             else
@@ -80,19 +99,42 @@ imageModal photo =
                 [ span [ class "pointer close f2 moon-gray absolute right-1", onClick StopViewing ] [ text "×" ]
                 , div [ class "flex" ]
                     [ img [ class "pa4 mw7", src photo.url, style [ ( "height", "auto" ) ] ] []
-                    , div [ class "w-100" ]
-                        [ h1 [ class "white" ] [ text "Details" ]
-                        , dl [ class "lh-title white mt0" ]
-                            [ dt [ class "f6 b" ]
-                                [ span [] [ sourceIcon photo.source ] ]
-                            , dd [ class "ml0" ]
-                                [ text photo.source ]
+                    , div [ class "w-100 white flex flex-column items-start" ]
+                        [ h1 [ class "white" ]
+                            [ text "Details" ]
+                        , div
+                            [ style [ ( "flex-grow", "1" ) ] ]
+                            [ dl [ class "f6 lh-title mv2" ]
+                                [ dt [ class "dib b" ]
+                                    [ text "Source:" ]
+                                , dd [ class "dib ml1" ]
+                                    [ text photo.source ]
+                                ]
+                            , dl [ class "f6 lh-title mv2" ]
+                                [ dt [ class "dib b" ]
+                                    [ text "Description:" ]
+                                , dd [ class "dib ml1" ]
+                                    [ text (photoDescription photo) ]
+                                ]
+                            , dl [ class "f6 lh-title mv2" ]
+                                [ dt [ class "dib b" ]
+                                    [ text "Owner:" ]
+                                , dd [ class "dib ml1" ]
+                                    [ text photo.owner ]
+                                ]
+                            , dl [ class "f6 lh-title mv2" ]
+                                [ dt [ class "dib b" ]
+                                    [ text "License:" ]
+                                , dd [ class "dib ml1" ]
+                                    [ text photo.license ]
+                                ]
                             ]
-                        , a [ class "f6 no-underline silver br2 ba b--black ph3 pv2 hover-moon-gray mr2", href photo.url, style [ ( "background", "#111111" ) ] ]
-                            [ span [] [ i [ class "fas fa-search pr2" ] [], text "View" ] ]
-                        , viewBtn
-                        , a [ class "f6 no-underline silver br2 ba b--black ph3 pv2 hover-moon-gray mr2", href photo.url, style [ ( "background", "#111111" ) ] ]
-                            [ span [] [ i [ class "fas fa-link pr2" ] [], text "Copy" ] ]
+                        , div [ class "pb4" ]
+                            [ a [ class "f6 no-underline silver br2 ba b--black ph3 pv2 hover-moon-gray mr2", href photo.url, style [ ( "background", "#111111" ) ] ]
+                                [ span [] [ i [ class "fas fa-search pr2" ] [], text "View" ] ]
+                            , visitBtn
+                            , copyButton photo.url
+                            ]
                         ]
                     ]
                 ]
@@ -101,35 +143,46 @@ imageModal photo =
 
 resultsPage : Model -> Html Msg -> Html Msg
 resultsPage model html =
-    case model.viewing of
-        Just photo ->
-            div [ class "h-100" ]
-                [ div [ class "w-100 pa3 flex justify-between items-center bb", id "resultsHeader" ]
-                    [ div [ class "w-100 flex items-center" ]
-                        [ a [ href "/", class "mr3" ]
-                            [ img [ src "shutter.svg", Svg.Attributes.width "50", Svg.Attributes.height "50", class "dim" ]
-                                []
-                            ]
-                        , (searchBar model)
-                        ]
-                    ]
-                , (imageModal photo)
-                , html
-                ]
+    let
+        viewImage =
+            case model.viewing of
+                Just photo ->
+                    (imageModal photo)
 
-        Nothing ->
-            div [ class "h-100" ]
-                [ div [ class "w-100 pa3 flex justify-between items-center bb", id "resultsHeader" ]
-                    [ div [ class "w-100 flex items-center" ]
-                        [ a [ href "/", class "mr3" ]
-                            [ img [ src "shutter.svg", Svg.Attributes.width "50", Svg.Attributes.height "50", class "dim" ]
-                                []
-                            ]
-                        , (searchBar model)
+                Nothing ->
+                    text ""
+    in
+        div [ class "h-100" ]
+            [ div [ class "w-100 pa3 flex justify-between items-center bb", id "resultsHeader" ]
+                [ div [ class "w-100 flex items-center" ]
+                    [ a [ href "/", class "mr3" ]
+                        [ img [ src "shutter.svg", Svg.Attributes.width "50", Svg.Attributes.height "50", class "dim" ]
+                            []
+                        ]
+                    , (searchBar model)
+                    , fieldset [ class "bn" ]
+                        [ checkbox "flickr" model.sources
+                        , checkbox "bing" model.sources
+                        , checkbox "local" model.sources
                         ]
                     ]
-                , html
                 ]
+            , viewImage
+            , html
+            ]
+
+
+checkbox : String -> Sources -> Html Msg
+checkbox msg sources =
+    label []
+        [ input
+            [ type_ "checkbox"
+            , onClick (Msgs.ToggleCheckbox msg)
+            , checked (S.member msg sources)
+            ]
+            []
+        , text msg
+        ]
 
 
 imageGrid : Model -> Html Msg
@@ -268,7 +321,7 @@ searchInput model =
 cancelButton : Model -> Html Msg
 cancelButton model =
     let
-        mystyle =
+        btnStyle =
             if String.isEmpty model.query then
                 style [ ( "visibility", "hidden" ) ]
             else
@@ -280,7 +333,7 @@ cancelButton model =
             , onClick ClearInput
             , type_ "reset"
             ]
-            [ i [ id "clearButton", class "fas fa-times", mystyle ] [] ]
+            [ i [ id "clearButton", class "fas fa-times", btnStyle ] [] ]
 
 
 searchButton : String -> Html msg
