@@ -35,7 +35,7 @@ searchImage query sources =
 
 photosDecoder : Decoder (List Photo)
 photosDecoder =
-    list photoDecoder
+    at [ "results" ] (list photoDecoder)
 
 
 photoDecoder : Decoder Photo
@@ -45,3 +45,6 @@ photoDecoder =
         |> required "source" string
         |> optional "loaded" bool False
         |> optional "host" string ""
+        |> optional "description" string ""
+        |> optional "license" string ""
+        |> optional "owner_name" string ""
